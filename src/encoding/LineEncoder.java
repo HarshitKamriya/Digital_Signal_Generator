@@ -1,5 +1,6 @@
+
 package encoding;
 
-public class LineEncoder {
-    
+public interface LineEncoder {
+    int[] encode(String bits);
 }
