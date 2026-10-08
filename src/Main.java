@@ -4,6 +4,7 @@ import data.DataType;
 import data.DigitalDataGenerator;
 import data.PalindromeFinder;
 import encoding.LineEncoder;
+import encoding.NRZI;
 import encoding.NRZL;
 
 public class Main {
@@ -80,7 +81,19 @@ public class Main {
         //         "NRZ-L Signal: " + Arrays.toString(signal));
 
 
+        
 
+        // testing nrzi
+        String bits = "10110";
+
+        LineEncoder encoder = new NRZI();
+
+        int[] signal = encoder.encode(bits);
+
+        System.out.println("Digital Data: " + bits);
+        System.out.println(
+            "NRZ-I Signal: " + Arrays.toString(signal)
+        );
 
 
 
