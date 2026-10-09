@@ -4,6 +4,7 @@ import data.DataType;
 import data.DigitalDataGenerator;
 import data.PalindromeFinder;
 import encoding.LineEncoder;
+import encoding.Manchester;
 import encoding.NRZI;
 import encoding.NRZL;
 
@@ -84,18 +85,31 @@ public class Main {
         
 
         // testing nrzi
-        String bits = "10110";
+        // String bits = "10110";
 
-        LineEncoder encoder = new NRZI();
+        // LineEncoder encoder = new NRZI();
+
+        // int[] signal = encoder.encode(bits);
+
+        // System.out.println("Digital Data: " + bits);
+        // System.out.println(
+        //     "NRZ-I Signal: " + Arrays.toString(signal)
+        // );
+
+
+
+
+        // verifying manchester
+        String bits = "1010";
+
+        LineEncoder encoder = new Manchester();
 
         int[] signal = encoder.encode(bits);
 
         System.out.println("Digital Data: " + bits);
         System.out.println(
-            "NRZ-I Signal: " + Arrays.toString(signal)
+            "Manchester Signal: " + Arrays.toString(signal)
         );
-
-
 
     }
 }
