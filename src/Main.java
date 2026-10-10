@@ -3,6 +3,7 @@ import java.util.Arrays;
 import data.DataType;
 import data.DigitalDataGenerator;
 import data.PalindromeFinder;
+import encoding.DifferentialManchester;
 import encoding.LineEncoder;
 import encoding.Manchester;
 import encoding.NRZI;
@@ -100,16 +101,30 @@ public class Main {
 
 
         // verifying manchester
-        String bits = "1010";
+        // String bits = "1010";
 
-        LineEncoder encoder = new Manchester();
+        // LineEncoder encoder = new Manchester();
 
-        int[] signal = encoder.encode(bits);
+        // int[] signal = encoder.encode(bits);
 
-        System.out.println("Digital Data: " + bits);
-        System.out.println(
-            "Manchester Signal: " + Arrays.toString(signal)
-        );
+        // System.out.println("Digital Data: " + bits);
+        // System.out.println(
+        //     "Manchester Signal: " + Arrays.toString(signal)
+        // );
+
+
+        // verifying differential manchester
+        // String bits = "1010";
+
+        // LineEncoder encoder = new DifferentialManchester();
+
+        // int[] signal = encoder.encode(bits);
+
+        // System.out.println("Digital Data: " + bits);
+        // System.out.println(
+        //     "Differential Manchester Signal: "
+        //     + Arrays.toString(signal)
+        // );
 
     }
 }
