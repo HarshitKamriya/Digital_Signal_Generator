@@ -3,6 +3,7 @@ import java.util.Arrays;
 import data.DataType;
 import data.DigitalDataGenerator;
 import data.PalindromeFinder;
+import encoding.AMI;
 import encoding.DifferentialManchester;
 import encoding.LineEncoder;
 import encoding.Manchester;
@@ -126,5 +127,22 @@ public class Main {
         //     + Arrays.toString(signal)
         // );
 
+
+
+        // verifying AMI
+        String bits = "10110011";
+
+        LineEncoder encoder = new AMI();
+
+        int[] signal = encoder.encode(bits);
+
+        System.out.println("Digital Data: " + bits);
+        System.out.println(
+            "AMI Signal: " + Arrays.toString(signal)
+        );
+
+
+
+        
     }
 }
