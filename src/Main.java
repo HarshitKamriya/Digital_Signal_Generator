@@ -9,6 +9,8 @@ import encoding.LineEncoder;
 import encoding.Manchester;
 import encoding.NRZI;
 import encoding.NRZL;
+import scrambling.B8ZS;
+import scrambling.Scrambler;
 
 public class Main {
     public static void main(String[] args) {
@@ -130,19 +132,38 @@ public class Main {
 
 
         // verifying AMI
-        String bits = "10110011";
+        // String bits = "10110011";
 
-        LineEncoder encoder = new AMI();
+        // LineEncoder encoder = new AMI();
 
-        int[] signal = encoder.encode(bits);
+        // int[] signal = encoder.encode(bits);
 
-        System.out.println("Digital Data: " + bits);
+        // System.out.println("Digital Data: " + bits);
+        // System.out.println(
+        //     "AMI Signal: " + Arrays.toString(signal)
+        // );
+
+
+        // testing B8ZS
+
+        int[] amiSignal = {
+            1, 0, 0, 0, 0, 0, 0, 0, 0
+        };
+
+        Scrambler scrambler = new B8ZS();
+
+        int[] scrambled = scrambler.scramble(amiSignal);
+
         System.out.println(
-            "AMI Signal: " + Arrays.toString(signal)
+            "Original AMI: " + Arrays.toString(amiSignal)
+        );
+
+        System.out.println(
+            "B8ZS Signal:  " + Arrays.toString(scrambled)
         );
 
 
 
-        
+
     }
 }

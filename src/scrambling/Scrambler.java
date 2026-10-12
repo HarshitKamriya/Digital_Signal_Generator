@@ -1,5 +1,6 @@
 package scrambling;
 
-public class Scrambler {
-    
+public interface Scrambler {
+
+    int[] scramble(int[] amiSignal);
 }
