@@ -1,169 +1,155 @@
-import java.util.Arrays;
 
 import data.DataType;
 import data.DigitalDataGenerator;
 import data.PalindromeFinder;
-import encoding.AMI;
-import encoding.DifferentialManchester;
+
 import encoding.LineEncoder;
-import encoding.Manchester;
-import encoding.NRZI;
 import encoding.NRZL;
-import scrambling.B8ZS;
+import encoding.NRZI;
+import encoding.Manchester;
+import encoding.DifferentialManchester;
+import encoding.AMI;
+
 import scrambling.Scrambler;
+import scrambling.B8ZS;
+import scrambling.HDB3;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Scanner;
 
 public class Main {
+
+    private static final Scanner scanner = new Scanner(System.in);
+
     public static void main(String[] args) {
-        // testing digital data generator
-        // DigitalDataGenerator generator = new DigitalDataGenerator();
 
-        // String randomData = generator.generate(12,DataType.RANDOM);
+        DigitalDataGenerator generator = new DigitalDataGenerator();
 
-        // String fixedfourData = generator.generate(12, DataType.FOUR_ZEROS);
-        // String fixedeightData = generator.generate(12, DataType.EIGHT_ZEROS);
+        PalindromeFinder palindromeFinder = new PalindromeFinder();
 
-        // System.out.println("Random Data: ");
-        // System.out.println(randomData);
+        List<LineEncoder> encoders = Arrays.asList(
+                new NRZL(),
+                new NRZI(),
+                new Manchester(),
+                new DifferentialManchester(),
+                new AMI());
 
-        // System.out.println();
-
-        // System.out.println("Data with 4 consecutive zero : ");
-        // System.out.println(fixedfourData);
-        // System.out.println();
-
-        // System.out.println("Data with 8 consecutive zero : ");
-        // System.out.println(fixedeightData);
-
-        // DigitalDataGenerator generator = new DigitalDataGenerator();
-        // PalindromeFinder palindromeFinder = new PalindromeFinder();
-
-
-        // String data = generator.generate(32, DataType.RANDOM);
-
-        // String palindrome = palindromeFinder.findLongestPalindrome(data);
-        // System.out.println("Digital DAta: ");
-        // System.out.println(data);
-
-        // System.out.println();
-
-        // System.out.println("Longest Palindrome: ");
-        // System.out.println(palindrome);
-        // System.out.println();
-
-
-
-        // String bits = "10110010";
-        // LineEncoder encoder = new NRZL();
-
-        // int[] signal = encoder.encode(bits);
-
-        // System.out.println("Digital Data: "+bits);
-
-        // System.out.println(
-        //     "Encoded Signal: " + Arrays.toString(signal)
-        // );
-
-
-        // // connecting to digital data generator
-        // DigitalDataGenerator generator = new DigitalDataGenerator();
-
-        // PalindromeFinder finder = new PalindromeFinder();
-
-        // // Generate the digital stream
-        // String bits = generator.generate(
-        //         32, DataType.EIGHT_ZEROS);
-
-        // // Find its longest palindrome
-        // String palindrome = finder.findLongestPalindrome(bits);
-
-        // // Encode using NRZ-L
-        // LineEncoder encoder = new NRZL();
-        // int[] signal = encoder.encode(bits);
-
-        // System.out.println("Digital Data: " + bits);
-        // System.out.println("Longest Palindrome: " + palindrome);
-        // System.out.println(
-        //         "NRZ-L Signal: " + Arrays.toString(signal));
-
-
-        
-
-        // testing nrzi
-        // String bits = "10110";
-
-        // LineEncoder encoder = new NRZI();
-
-        // int[] signal = encoder.encode(bits);
-
-        // System.out.println("Digital Data: " + bits);
-        // System.out.println(
-        //     "NRZ-I Signal: " + Arrays.toString(signal)
-        // );
-
-
-
-
-        // verifying manchester
-        // String bits = "1010";
-
-        // LineEncoder encoder = new Manchester();
-
-        // int[] signal = encoder.encode(bits);
-
-        // System.out.println("Digital Data: " + bits);
-        // System.out.println(
-        //     "Manchester Signal: " + Arrays.toString(signal)
-        // );
-
-
-        // verifying differential manchester
-        // String bits = "1010";
-
-        // LineEncoder encoder = new DifferentialManchester();
-
-        // int[] signal = encoder.encode(bits);
-
-        // System.out.println("Digital Data: " + bits);
-        // System.out.println(
-        //     "Differential Manchester Signal: "
-        //     + Arrays.toString(signal)
-        // );
-
-
-
-        // verifying AMI
-        // String bits = "10110011";
-
-        // LineEncoder encoder = new AMI();
-
-        // int[] signal = encoder.encode(bits);
-
-        // System.out.println("Digital Data: " + bits);
-        // System.out.println(
-        //     "AMI Signal: " + Arrays.toString(signal)
-        // );
-
-
-        // testing B8ZS
-
-        int[] amiSignal = {
-            1, 0, 0, 0, 0, 0, 0, 0, 0
+        String[] encoderNames = {
+                "NRZ-L",
+                "NRZ-I",
+                "Manchester",
+                "Differential Manchester",
+                "AMI"
         };
 
-        Scrambler scrambler = new B8ZS();
+        System.out.println("================================");
+        System.out.println(" DIGITAL SIGNAL ENCODER");
+        System.out.println("================================");
 
-        int[] scrambled = scrambler.scramble(amiSignal);
+        int length = readInt(
+                "Enter digital data length: ", 1, 100000);
 
-        System.out.println(
-            "Original AMI: " + Arrays.toString(amiSignal)
-        );
+        System.out.println("\nChoose data generation type:");
+        System.out.println("1. Completely random data");
+        System.out.println("2. Data containing 4 consecutive zeros");
+        System.out.println("3. Data containing 8 consecutive zeros");
 
-        System.out.println(
-            "B8ZS Signal:  " + Arrays.toString(scrambled)
-        );
+        int dataChoice = readInt("Your choice: ", 1, 3);
 
+        DataType dataType = Arrays.asList(
+                DataType.RANDOM,
+                DataType.FOUR_ZEROS,
+                DataType.EIGHT_ZEROS).get(dataChoice - 1);
 
+        if (dataChoice == 2 && length < 4 ||
+                dataChoice == 3 && length < 8) {
+            System.out.println(
+                    "Length is too short for the selected pattern.");
+            return;
+        }
 
+        String bits = generator.generate(length, dataType);
 
+        System.out.println("\nGenerated digital data:");
+        System.out.println(bits);
+
+        String palindrome = palindromeFinder.findLongestPalindrome(bits);
+
+        System.out.println("\nLongest palindrome:");
+        System.out.println(palindrome);
+
+        System.out.println("\nChoose line encoding:");
+
+        for (int i = 0; i < encoderNames.length; i++) {
+            System.out.println((i + 1) + ". " + encoderNames[i]);
+        }
+
+        int encodingChoice = readInt("Your choice: ", 1, encoders.size());
+
+        LineEncoder encoder = encoders.get(encodingChoice - 1);
+
+        int[] signal = encoder.encode(bits);
+
+        System.out.println("\nSelected scheme: "
+                + encoderNames[encodingChoice - 1]);
+
+        System.out.println("Encoded signal:");
+        System.out.println(Arrays.toString(signal));
+
+        // Scrambling is available only for AMI.
+        if (encoder instanceof AMI) {
+
+            System.out.println("\nChoose scrambling:");
+            System.out.println("1. No scrambling");
+            System.out.println("2. B8ZS");
+            System.out.println("3. HDB3");
+
+            int scrambleChoice = readInt("Your choice: ", 1, 3);
+
+            if (scrambleChoice == 2) {
+
+                Scrambler scrambler = new B8ZS();
+                int[] scrambled = scrambler.scramble(signal);
+
+                System.out.println("\nB8ZS signal:");
+                System.out.println(Arrays.toString(scrambled));
+
+            } else if (scrambleChoice == 3) {
+
+                Scrambler scrambler = new HDB3();
+                int[] scrambled = scrambler.scramble(signal);
+
+                System.out.println("\nHDB3 signal:");
+                System.out.println(Arrays.toString(scrambled));
+            }
+        }
+
+        System.out.println("\nEncoding completed.");
+    }
+
+    private static int readInt(
+            String message, int min, int max) {
+
+        while (true) {
+            System.out.print(message);
+
+            String input = scanner.nextLine().trim();
+
+            try {
+                int value = Integer.parseInt(input);
+
+                if (value >= min && value <= max) {
+                    return value;
+                }
+
+            } catch (NumberFormatException ignored) {
+                // Ask again for invalid input.
+            }
+
+            System.out.println(
+                    "Enter an integer between "
+                            + min + " and " + max + ".");
+        }
     }
 }
