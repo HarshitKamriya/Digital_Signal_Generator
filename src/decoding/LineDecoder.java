@@ -1,5 +1,7 @@
+
 package decoding;
 
-public class LineDecoder {
-    
+public interface LineDecoder {
+
+    String decode(int[] signal);
 }
