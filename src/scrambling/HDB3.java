@@ -13,51 +13,66 @@ public class HDB3 implements Scrambler {
 
         int[] result = amiSignal.clone();
 
-        int lastPulse = -1;
+        int lastPulse = 0;
         int pulseCount = 0;
 
         for (int i = 0; i < result.length; i++) {
 
-            int value = result[i];
+            int level = result[i];
 
-            if (value < -1 || value > 1) {
+            if (level != -1 && level != 0 && level != 1) {
                 throw new IllegalArgumentException(
-                        "AMI signal must contain only -1, 0, and +1.");
+                        "Invalid AMI level at index " + i);
             }
 
-            if (value != 0) {
-                lastPulse = value;
+            if (level != 0) {
+
+                if (lastPulse != 0 && level == lastPulse) {
+                    throw new IllegalArgumentException(
+                            "Input is not a valid AMI signal at index " + i);
+                }
+
+                lastPulse = level;
                 pulseCount++;
             }
 
-            // Check for four consecutive zeros.
-            if (i + 3 < result.length
-                    && result[i] == 0
-                    && result[i + 1] == 0
-                    && result[i + 2] == 0
-                    && result[i + 3] == 0) {
-
-                if (pulseCount % 2 == 0) {
-                    // B00V: B is a normal AMI pulse.
-                    int b = -lastPulse;
-                    result[i] = b;
-                    result[i + 1] = 0;
-                    result[i + 2] = 0;
-                    result[i + 3] = b;
-
-                    lastPulse = b;
-                } else {
-                    // 000V: V has the same polarity
-                    // as the previous nonzero pulse.
-                    result[i] = 0;
-                    result[i + 1] = 0;
-                    result[i + 2] = 0;
-                    result[i + 3] = lastPulse;
-                }
-
-                pulseCount = 0;
-                i += 3;
+            // Detect four consecutive zeros.
+            if (i + 3 >= result.length
+                    || result[i] != 0
+                    || result[i + 1] != 0
+                    || result[i + 2] != 0
+                    || result[i + 3] != 0) {
+                continue;
             }
+
+            if (pulseCount % 2 == 1) {
+
+                // Odd pulse count: 000V.
+                // V has the same polarity as the previous pulse.
+                result[i] = 0;
+                result[i + 1] = 0;
+                result[i + 2] = 0;
+                result[i + 3] = lastPulse == 0 ? -1 : lastPulse;
+
+                lastPulse = result[i + 3];
+
+            } else {
+
+                // Even pulse count: B00V.
+                // B is opposite to the previous pulse;
+                // V has the same polarity as B.
+                int b = lastPulse == 0 ? 1 : -lastPulse;
+
+                result[i] = b;
+                result[i + 1] = 0;
+                result[i + 2] = 0;
+                result[i + 3] = b;
+
+                lastPulse = b;
+            }
+
+            pulseCount = 0;
+            i += 3;
         }
 
         return result;

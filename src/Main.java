@@ -1,48 +1,22 @@
 
-import encoding.LineEncoder;
-import encoding.Manchester;
-import encoding.DifferentialManchester;
-
-import decoding.LineDecoder;
-import decoding.ManchesterDecoder;
-import decoding.DifferentialManchesterDecoder;
-
+import scrambling.HDB3;
 import java.util.Arrays;
 
 public class Main {
 
     public static void main(String[] args) {
 
-        String bits = "101100101";
+        HDB3 encoder = new HDB3();
 
-        test(
-                bits,
-                new Manchester(),
-                new ManchesterDecoder(),
-                "Manchester");
+        int[] oddPulseCase = { 1, 0, 0, 0, 0 };
+        int[] evenPulseCase = { 1, -1, 0, 0, 0, 0 };
 
-        test(
-                bits,
-                new DifferentialManchester(),
-                new DifferentialManchesterDecoder(),
-                "Differential Manchester");
-    }
-
-    private static void test(
-            String bits,
-            LineEncoder encoder,
-            LineDecoder decoder,
-            String scheme) {
-
-        int[] signal = encoder.encode(bits);
-        String decoded = decoder.decode(signal);
-
-        System.out.println("\nScheme: " + scheme);
-        System.out.println("Original: " + bits);
+        System.out.println("Odd pulse count:");
         System.out.println(
-                "Signal:   " + Arrays.toString(signal));
-        System.out.println("Decoded:  " + decoded);
+                Arrays.toString(encoder.scramble(oddPulseCase)));
+
+        System.out.println("\nEven pulse count:");
         System.out.println(
-                "Correct:  " + bits.equals(decoded));
+                Arrays.toString(encoder.scramble(evenPulseCase)));
     }
 }
