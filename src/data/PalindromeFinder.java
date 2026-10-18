@@ -3,7 +3,7 @@ package data;
 public class PalindromeFinder {
     // it will find the longest palindromic substring in the given binary data
 
-    public String findLongestPalindrome(String data){
+    public static String findLongestPalindrome(String data){
         if(data == null ||  data.isEmpty()) return "";
 
         // transofrm the data so that we can handel even and odd length easily
@@ -62,7 +62,7 @@ public class PalindromeFinder {
 
 
     // adding seperators so that both even and odd lenght palindromes can be processed uniformly.
-    private String preprocess(String data){
+    private static String preprocess(String data){
         StringBuilder result = new StringBuilder();
         result.append('^');
 
