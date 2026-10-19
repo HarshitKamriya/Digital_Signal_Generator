@@ -5,74 +5,81 @@ public class HDB3 implements Scrambler {
 
     @Override
     public int[] scramble(int[] amiSignal) {
-
         if (amiSignal == null) {
-            throw new IllegalArgumentException(
-                    "AMI signal cannot be null.");
+            throw new IllegalArgumentException("Input signal cannot be null.");
         }
 
-        int[] result = amiSignal.clone();
+        int n = amiSignal.length;
+        int[] result = new int[n];
+        boolean[] isOne = new boolean[n];
 
-        int lastPulse = 0;
-        int pulseCount = 0;
+        // Validate that the input is a valid AMI signal and record its 1s.
+        int previousInputPulse = 0;
 
-        for (int i = 0; i < result.length; i++) {
+        for (int i = 0; i < n; i++) {
+            int value = amiSignal[i];
 
-            int level = result[i];
-
-            if (level != -1 && level != 0 && level != 1) {
+            if (value < -1 || value > 1) {
                 throw new IllegalArgumentException(
-                        "Invalid AMI level at index " + i);
+                        "Signal values must be -1, 0, or 1.");
             }
 
-            if (level != 0) {
-
-                if (lastPulse != 0 && level == lastPulse) {
+            if (value != 0) {
+                if (previousInputPulse != 0
+                        && value == previousInputPulse) {
                     throw new IllegalArgumentException(
                             "Input is not a valid AMI signal at index " + i);
                 }
 
-                lastPulse = level;
-                pulseCount++;
+                isOne[i] = true;
+                previousInputPulse = value;
             }
+        }
 
-            // Detect four consecutive zeros.
-            if (i + 3 >= result.length
-                    || result[i] != 0
-                    || result[i + 1] != 0
-                    || result[i + 2] != 0
-                    || result[i + 3] != 0) {
-                continue;
-            }
+        int lastPulse = 0;
+        int pulseCount = 0;
+        int i = 0;
 
-            if (pulseCount % 2 == 1) {
+        while (i < n) {
+            // Find four consecutive input zeros.
+            boolean fourZeros = i + 3 < n
+                    && !isOne[i]
+                    && !isOne[i + 1]
+                    && !isOne[i + 2]
+                    && !isOne[i + 3];
 
-                // Odd pulse count: 000V.
-                // V has the same polarity as the previous pulse.
-                result[i] = 0;
-                result[i + 1] = 0;
-                result[i + 2] = 0;
-                result[i + 3] = lastPulse == 0 ? -1 : lastPulse;
+            if (fourZeros) {
+                if (pulseCount % 2 == 1) {
+                    // Odd number of pulses: 000V.
+                    // V has the same polarity as the previous pulse.
+                    if (lastPulse == 0) {
+                        throw new IllegalStateException(
+                                "Invalid HDB3 state for 000V substitution.");
+                    }
 
-                lastPulse = result[i + 3];
+                    result[i + 3] = lastPulse;
+                } else {
+                    // Even number of pulses: B00V.
+                    // B follows normal AMI polarity; V violates it.
+                    int bPulse = (lastPulse == 0) ? 1 : -lastPulse;
 
+                    result[i] = bPulse;
+                    result[i + 3] = bPulse;
+                    lastPulse = bPulse;
+                }
+
+                pulseCount = 0;
+                i += 4;
             } else {
+                if (isOne[i]) {
+                    // Encode a data 1 using alternating AMI polarity.
+                    lastPulse = (lastPulse == 0) ? 1 : -lastPulse;
+                    result[i] = lastPulse;
+                    pulseCount++;
+                }
 
-                // Even pulse count: B00V.
-                // B is opposite to the previous pulse;
-                // V has the same polarity as B.
-                int b = lastPulse == 0 ? 1 : -lastPulse;
-
-                result[i] = b;
-                result[i + 1] = 0;
-                result[i + 2] = 0;
-                result[i + 3] = b;
-
-                lastPulse = b;
+                i++;
             }
-
-            pulseCount = 0;
-            i += 3;
         }
 
         return result;

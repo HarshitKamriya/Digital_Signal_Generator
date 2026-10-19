@@ -24,6 +24,12 @@ import modulation.PCMEncoder;
 import modulation.PCMDecoder;
 import visualization.SignalPlotter;
 
+import scrambling.Scrambler;
+import scrambling.B8ZS;
+import scrambling.B8ZSDescrambler;
+import scrambling.HDB3;
+import scrambling.HDB3Descrambler;
+
 public class Main {
 
     public static void main(String[] args) {
@@ -34,58 +40,132 @@ public class Main {
             System.out.println(" DIGITAL SIGNAL ENCODER/DECODER");
             System.out.println("==================================");
 
-            // 1. Choose data pattern.
-            System.out.println("\nSelect data pattern:");
-            System.out.println("1. Completely random");
-            System.out.println("2. Random with four consecutive zeros");
-            System.out.println("3. Random with eight consecutive zeros");
+            System.out.println("\nSelect input type:");
+            System.out.println("1. Digital input");
+            System.out.println("2. Analog input (PCM)");
             System.out.print("Choice: ");
 
-            int dataChoice = scanner.nextInt();
+            int inputChoice = scanner.nextInt();
 
-            DataType dataType;
-
-            switch (dataChoice) {
-                case 1:
-                    dataType = DataType.RANDOM;
-                    break;
-                case 2:
-                    dataType = DataType.FOUR_ZEROS;
-                    break;
-                case 3:
-                    dataType = DataType.EIGHT_ZEROS;
-                    break;
-                default:
-                    System.out.println("Invalid data choice.");
-                    return;
-            }
-
-            System.out.print("Enter bit sequence length (minimum 8): ");
-            int length = scanner.nextInt();
-
-            if (length < 8) {
-                System.out.println("Length must be at least 8.");
+            if (inputChoice != 1 && inputChoice != 2) {
+                System.out.println("Invalid input choice.");
                 return;
             }
 
-            // 2. Generate digital data.
-            DigitalDataGenerator generator = new DigitalDataGenerator();
+            String bits;
+            double[] reconstructedSamples = null;
+            boolean analogMode = inputChoice == 2;
 
-            String bits = generator.generate(length, dataType);
+            // 1. Obtain the digital bitstream.
+            if (!analogMode) {
 
-            System.out.println("\nGenerated digital data:");
+                System.out.println("\nSelect data pattern:");
+                System.out.println("1. Completely random");
+                System.out.println("2. Random with four consecutive zeros");
+                System.out.println("3. Random with eight consecutive zeros");
+                System.out.print("Choice: ");
+
+                int dataChoice = scanner.nextInt();
+
+                DataType dataType;
+
+                switch (dataChoice) {
+                    case 1:
+                        dataType = DataType.RANDOM;
+                        break;
+                    case 2:
+                        dataType = DataType.FOUR_ZEROS;
+                        break;
+                    case 3:
+                        dataType = DataType.EIGHT_ZEROS;
+                        break;
+                    default:
+                        System.out.println("Invalid data choice.");
+                        return;
+                }
+
+                System.out.print("Enter bit sequence length (minimum 8): ");
+                int length = scanner.nextInt();
+
+                if (length < 8) {
+                    System.out.println("Length must be at least 8.");
+                    return;
+                }
+
+                DigitalDataGenerator generator = new DigitalDataGenerator();
+                bits = generator.generate(length, dataType);
+
+                System.out.println("\nGenerated digital data:");
+                System.out.println(bits);
+
+                String palindrome = PalindromeFinder.findLongestPalindrome(bits);
+
+                System.out.println("\nLongest palindromic substring:");
+                System.out.println(palindrome);
+                System.out.println("Palindrome length: " + palindrome.length());
+
+            } else {
+
+                System.out.print("Enter number of analog samples (minimum 1): ");
+                int sampleCount = scanner.nextInt();
+
+                if (sampleCount < 1) {
+                    System.out.println("Sample count must be positive.");
+                    return;
+                }
+
+                double[] analogSamples = new double[sampleCount];
+
+                System.out.println(
+                        "Enter " + sampleCount
+                                + " sample values in the range [-1, 1]:");
+
+                for (int i = 0; i < sampleCount; i++) {
+                    analogSamples[i] = scanner.nextDouble();
+
+                    if (!Double.isFinite(analogSamples[i])
+                            || analogSamples[i] < -1.0
+                            || analogSamples[i] > 1.0) {
+                        System.out.println(
+                                "Each sample must be finite and in [-1, 1].");
+                        return;
+                    }
+                }
+
+                System.out.print("Enter PCM bits per sample (1-16): ");
+                int bitsPerSample = scanner.nextInt();
+
+                if (bitsPerSample < 1 || bitsPerSample > 16) {
+                    System.out.println("Bits per sample must be between 1 and 16.");
+                    return;
+                }
+
+                PCMEncoder pcmEncoder = new PCMEncoder(bitsPerSample);
+                PCMDecoder pcmDecoder = new PCMDecoder(bitsPerSample);
+
+                bits = pcmEncoder.encode(analogSamples);
+                reconstructedSamples = pcmDecoder.decode(bits);
+
+                System.out.println("\n========== PCM ==========");
+                System.out.println("Bits per sample: "
+                        + pcmEncoder.getBitsPerSample());
+                System.out.println("Quantization levels: "
+                        + pcmEncoder.getLevels());
+                System.out.println("PCM bitstream:");
+                System.out.println(bits);
+                System.out.println("Reconstructed samples:");
+                System.out.println(Arrays.toString(reconstructedSamples));
+
+                SignalPlotter.plotPCM(
+                        "PCM Reconstructed Signal",
+                        reconstructedSamples);
+            }
+
+            System.out.println("\nDigital bitstream to line encoder:");
             System.out.println(bits);
-            System.out.println("Length: " + bits.length());
+            System.out.println("Bit count: " + bits.length());
 
-            // 3. Find the longest palindrome.
-            String palindrome = PalindromeFinder.findLongestPalindrome(bits);
-
-            System.out.println("\nLongest palindromic substring:");
-            System.out.println(palindrome);
-            System.out.println(
-                    "Palindrome length: " + palindrome.length());
-
-            // 4. Choose a line-coding scheme.
+            // 2. Select the line-coding scheme.
             System.out.println("\nSelect line-coding scheme:");
             System.out.println("1. NRZ-L");
             System.out.println("2. NRZ-I");
@@ -131,53 +211,71 @@ public class Main {
                     return;
             }
 
-            // 5. Encode and decode the generated data.
-            int[] signal = encoder.encode(bits);
-            String decodedBits = decoder.decode(signal);
+            // 3. Encode, optionally scramble, then reverse the process.
+            int[] encodedSignal = encoder.encode(bits);
+            int[] transmittedSignal = encodedSignal.clone();
 
-            System.out.println("\nSelected scheme: " + schemeName);
-            System.out.println("Encoded signal:");
-            System.out.println(Arrays.toString(signal));
+            boolean scramblingApplied = false;
+            String selectedScheme = schemeName;
 
-            System.out.println("\nDecoded data:");
+            if (schemeChoice == 5) {
+                System.out.println("\nApply scrambling?");
+                System.out.println("1. No scrambling");
+                System.out.println("2. B8ZS");
+                System.out.println("3. HDB3");
+                System.out.print("Choice: ");
+
+                int scrambleChoice = scanner.nextInt();
+
+                if (scrambleChoice == 2) {
+                    Scrambler scrambler = new B8ZS();
+                    transmittedSignal = scrambler.scramble(encodedSignal);
+                    selectedScheme = "AMI + B8ZS";
+                    scramblingApplied = true;
+
+                } else if (scrambleChoice == 3) {
+                    Scrambler scrambler = new HDB3();
+                    transmittedSignal = scrambler.scramble(encodedSignal);
+                    selectedScheme = "AMI + HDB3";
+                    scramblingApplied = true;
+
+                } else if (scrambleChoice != 1) {
+                    System.out.println("Invalid scrambling choice.");
+                    return;
+                }
+            }
+
+            System.out.println("\nSelected scheme: " + selectedScheme);
+            System.out.println("Transmitted signal:");
+            System.out.println(Arrays.toString(transmittedSignal));
+
+            int[] signalForDecoding = transmittedSignal.clone();
+
+            if (scramblingApplied) {
+                if (selectedScheme.equals("AMI + B8ZS")) {
+                    B8ZSDescrambler descrambler = new B8ZSDescrambler();
+                    signalForDecoding = descrambler.descramble(signalForDecoding);
+                } else {
+                    HDB3Descrambler descrambler = new HDB3Descrambler();
+                    signalForDecoding = descrambler.descramble(signalForDecoding);
+                }
+            }
+
+            String decodedBits = decoder.decode(signalForDecoding);
+
+            System.out.println("\nDecoded digital data:");
             System.out.println(decodedBits);
 
-            System.out.println(
-                    "Round-trip status: "
-                            + (bits.equals(decodedBits) ? "PASS" : "FAIL"));
+            System.out.println("Round-trip status: "
+                    + (bits.equals(decodedBits) ? "PASS" : "FAIL"));
 
-            // 6. Run PCM encoding and decoding.
-            double[] analogSamples = {
-                    -1.0, -0.75, -0.5, -0.25, 0.0,
-                    0.25, 0.5, 0.75, 1.0,
-                    0.5, 0.0, -0.5, -1.0
-            };
-
-            int bitsPerSample = 3;
-
-            PCMEncoder pcmEncoder = new PCMEncoder(bitsPerSample);
-
-            PCMDecoder pcmDecoder = new PCMDecoder(bitsPerSample);
-
-            String pcmBits = pcmEncoder.encode(analogSamples);
-            double[] reconstructed = pcmDecoder.decode(pcmBits);
-
-            System.out.println("\n========== PCM ==========");
-            System.out.println("Bits per sample: " + bitsPerSample);
-            System.out.println("Quantization levels: "
-                    + pcmEncoder.getLevels());
-            System.out.println("PCM bitstream: " + pcmBits);
-            System.out.println("Reconstructed samples:");
-            System.out.println(Arrays.toString(reconstructed));
-
-            // 7. Display plots.
             SignalPlotter.plotDigital(
-                    schemeName + " Signal", signal);
-
-            SignalPlotter.plotPCM(
-                    "PCM Reconstructed Signal", reconstructed);
+                    selectedScheme + " Signal",
+                    transmittedSignal);
 
             System.out.println("\nProcessing complete.");
+        } catch (IllegalArgumentException e) {
+            System.out.println("Input or processing error: " + e.getMessage());
         }
     }
 }
