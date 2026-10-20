@@ -7,7 +7,13 @@ public class DigitalDataGenerator {
     public DigitalDataGenerator(){
         random = new Random();
     }
-    public String generate(int length,DataType type){
+    public String generate(int length, DataType type) {
+        if (length <= 0) {
+            throw new IllegalArgumentException("Data length must be positive.");
+        }
+        if (type == null) {
+            throw new IllegalArgumentException("Data type cannot be null.");
+        }
         switch (type) {
             case RANDOM:
                 return generateRandomData(length);
@@ -16,27 +22,37 @@ public class DigitalDataGenerator {
             case EIGHT_ZEROS:
                 return generateDataWithFixedZeros(length, 8);
             default:
-                throw new IllegalArgumentException("Invalid data type");
+                throw new IllegalArgumentException("Invalid data type: " + type);
         }
     }
-    public String generateRandomData(int length){
-        StringBuilder data = new StringBuilder();
-        
-        for(int i=0;i<length;i++){
+
+    public String generateRandomData(int length) {
+        if (length <= 0) {
+            throw new IllegalArgumentException("Data length must be positive.");
+        }
+        StringBuilder data = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
             data.append(random.nextInt(2));
         }
         return data.toString();
     }
-    public String generateDataWithFixedZeros(int length,int zeroCount){
-        if(zeroCount>length){
-            throw new IllegalArgumentException("Zero sequence cannot be longer that data length.");
+
+    public String generateDataWithFixedZeros(int length, int zeroCount) {
+        if (length <= 0) {
+            throw new IllegalArgumentException("Data length must be positive.");
         }
-        StringBuilder data = new StringBuilder();
-        for(int i=0;i<length;i++){
-            data.append(random.nextInt((2)));
+        if (zeroCount <= 0) {
+            throw new IllegalArgumentException("Zero count must be positive.");
         }
-        int start = random.nextInt(length-zeroCount+1);
-        for(int i=start;i<start+zeroCount;i++){
+        if (zeroCount > length) {
+            throw new IllegalArgumentException("Zero sequence cannot be longer than data length.");
+        }
+        StringBuilder data = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
+            data.append(random.nextInt(2));
+        }
+        int start = random.nextInt(length - zeroCount + 1);
+        for (int i = start; i < start + zeroCount; i++) {
             data.setCharAt(i, '0');
         }
         return data.toString();

@@ -25,5 +25,21 @@ public class DeltaModulationTest {
 
         System.out.println("\nReconstructed staircase:");
         System.out.println(Arrays.toString(reconstructed));
+
+        // Compute quantization metrics
+        double maxError = 0.0;
+        double sumSqError = 0.0;
+        for (int i = 0; i < samples.length; i++) {
+            double err = Math.abs(samples[i] - reconstructed[i]);
+            maxError = Math.max(maxError, err);
+            sumSqError += err * err;
+        }
+        double mse = sumSqError / samples.length;
+
+        System.out.printf("%nMaximum Absolute Error: %.4f%n", maxError);
+        System.out.printf("Mean Squared Error (MSE): %.4f%n", mse);
+
+        boolean passed = bits.length() == samples.length && reconstructed.length == samples.length;
+        System.out.println("Test Status: " + (passed ? "PASS" : "FAIL"));
     }
 }

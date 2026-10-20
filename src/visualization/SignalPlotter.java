@@ -49,8 +49,8 @@ public class SignalPlotter {
             JFrame frame = new JFrame(title);
             frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
             frame.add(new PlotPanel(
-                    values, digital, xLabel, yLabel));
-            frame.setSize(900, 500);
+                    title, values, digital, xLabel, yLabel));
+            frame.setSize(920, 520);
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
         });
@@ -58,13 +58,15 @@ public class SignalPlotter {
 
     private static class PlotPanel extends JPanel {
 
+        private final String plotTitle;
         private final double[] values;
         private final boolean digital;
         private final String xLabel;
         private final String yLabel;
 
-        PlotPanel(double[] values, boolean digital,
+        PlotPanel(String plotTitle, double[] values, boolean digital,
                 String xLabel, String yLabel) {
+            this.plotTitle = plotTitle;
             this.values = values;
             this.digital = digital;
             this.xLabel = xLabel;
@@ -84,9 +86,9 @@ public class SignalPlotter {
                         RenderingHints.VALUE_ANTIALIAS_ON);
 
                 int left = 75;
-                int right = getWidth() - 30;
-                int top = 35;
-                int bottom = getHeight() - 65;
+                int right = getWidth() - 35;
+                int top = 40;
+                int bottom = getHeight() - 70;
 
                 if (right <= left || bottom <= top) {
                     return;
@@ -118,14 +120,14 @@ public class SignalPlotter {
                 final double yMax = max;
 
                 // Title
-                g.setColor(Color.BLACK);
+                g.setColor(new Color(20, 30, 50));
                 g.setFont(new Font("SansSerif", Font.BOLD, 16));
                 FontMetrics fm = g.getFontMetrics();
-                g.drawString(titleText(),
-                        (getWidth() - fm.stringWidth(titleText())) / 2,
-                        22);
+                g.drawString(plotTitle,
+                        (getWidth() - fm.stringWidth(plotTitle)) / 2,
+                        25);
 
-                // Horizontal grid and labels
+                // Horizontal grid lines and Y-axis labels
                 g.setFont(new Font("SansSerif", Font.PLAIN, 11));
 
                 for (int i = 0; i <= 4; i++) {
@@ -134,7 +136,7 @@ public class SignalPlotter {
 
                     int y = mapY(value, yMin, yMax, top, bottom);
 
-                    g.setColor(new Color(220, 220, 220));
+                    g.setColor(new Color(230, 230, 235));
                     g.drawLine(left, y, right, y);
 
                     g.setColor(Color.DARK_GRAY);
@@ -143,17 +145,43 @@ public class SignalPlotter {
                             15, y + 4);
                 }
 
+                // Reference line at y = 0
+                if (yMin <= 0 && yMax >= 0) {
+                    int zeroY = mapY(0.0, yMin, yMax, top, bottom);
+                    g.setColor(new Color(180, 180, 185));
+                    Stroke prevStroke = g.getStroke();
+                    float[] dash = { 4.0f, 4.0f };
+                    g.setStroke(new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, dash, 0.0f));
+                    g.drawLine(left, zeroY, right, zeroY);
+                    g.setStroke(prevStroke);
+                }
+
                 // Axes
-                g.setColor(Color.BLACK);
+                g.setColor(new Color(60, 60, 60));
+                g.setStroke(new BasicStroke(1.5f));
                 g.drawLine(left, top, left, bottom);
                 g.drawLine(left, bottom, right, bottom);
 
-                // Signal
-                g.setColor(new Color(30, 100, 200));
-                g.setStroke(new BasicStroke(2f));
-
+                // X-axis sample index ticks (if count <= 40)
                 double width = right - left;
                 double step = width / values.length;
+
+                g.setFont(new Font("SansSerif", Font.PLAIN, 10));
+                g.setColor(Color.GRAY);
+                if (values.length <= 40) {
+                    for (int i = 0; i < values.length; i++) {
+                        int xCenter = (int) Math.round(left + (i + 0.5) * step);
+                        int xStart = (int) Math.round(left + i * step);
+                        g.drawLine(xStart, bottom, xStart, bottom + 4);
+                        String tickLabel = String.valueOf(i);
+                        FontMetrics tfm = g.getFontMetrics();
+                        g.drawString(tickLabel, xCenter - tfm.stringWidth(tickLabel) / 2, bottom + 16);
+                    }
+                }
+
+                // Signal waveform
+                g.setColor(new Color(25, 118, 210));
+                g.setStroke(new BasicStroke(2.2f));
 
                 for (int i = 0; i < values.length; i++) {
                     int x1 = (int) Math.round(left + i * step);
@@ -162,10 +190,10 @@ public class SignalPlotter {
                     int y1 = mapY(
                             values[i], yMin, yMax, top, bottom);
 
-                    // Horizontal segment for this sample.
+                    // Horizontal segment for this sample
                     g.drawLine(x1, y1, x2, y1);
 
-                    // Vertical transition to the next sample.
+                    // Vertical transition to the next sample
                     if (i < values.length - 1) {
                         int y2 = mapY(
                                 values[i + 1], yMin, yMax, top, bottom);
@@ -173,24 +201,21 @@ public class SignalPlotter {
                     }
                 }
 
-                // Axis labels
-                g.setColor(Color.BLACK);
-                g.setFont(new Font("SansSerif", Font.PLAIN, 13));
-                g.drawString(xLabel, (left + right) / 2, getHeight() - 20);
+                // Axis labels (properly centered)
+                g.setColor(new Color(30, 30, 30));
+                g.setFont(new Font("SansSerif", Font.BOLD, 12));
+                FontMetrics fmAxis = g.getFontMetrics();
+                int xLabelX = (left + right - fmAxis.stringWidth(xLabel)) / 2;
+                g.drawString(xLabel, xLabelX, getHeight() - 20);
 
                 g.rotate(-Math.PI / 2);
-                g.drawString(yLabel, -(top + bottom) / 2 - 25, 20);
+                int yLabelX = -(top + bottom + fmAxis.stringWidth(yLabel)) / 2;
+                g.drawString(yLabel, yLabelX, 22);
                 g.rotate(Math.PI / 2);
 
             } finally {
                 g.dispose();
             }
-        }
-
-        private String titleText() {
-            return digital
-                    ? "Digital Line-Coded Signal"
-                    : "Reconstructed PCM Staircase Signal";
         }
 
         private int mapY(double value, double min, double max,

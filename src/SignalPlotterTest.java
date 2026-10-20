@@ -2,6 +2,8 @@
 import visualization.SignalPlotter;
 import modulation.PCMEncoder;
 import modulation.PCMDecoder;
+import modulation.DeltaModulator;
+import modulation.DeltaDemodulator;
 import encoding.Manchester;
 
 public class SignalPlotterTest {
@@ -29,5 +31,15 @@ public class SignalPlotterTest {
 
         SignalPlotter.plotPCM(
                 "PCM Reconstruction", reconstructed);
+
+        // Test 3: Plot the Delta Modulation signal.
+        DeltaModulator dmEncoder = new DeltaModulator(0.25);
+        DeltaDemodulator dmDecoder = new DeltaDemodulator(0.25);
+
+        String dmBits = dmEncoder.encode(analogSamples);
+        double[] dmReconstructed = dmDecoder.decode(dmBits);
+        
+        SignalPlotter.plotPCM(
+                "Delta Modulation Reconstruction", dmReconstructed);
     }
 }
